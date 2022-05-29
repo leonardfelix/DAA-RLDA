@@ -1,0 +1,168 @@
+
+edgeGreen = []  #stack
+minimumEdgeData = {"S_A": 0,"S_B" :0,"A_C":0,"B_D":0,"C_F":0,"C_D":0,"D_F":0}    #dict
+
+
+class vertex():
+    def __init__(self,predecessor, successor, name):
+        self.name = name
+        self.successor = successor
+        self.predecessor = predecessor
+    
+    def predecessor(self):
+        return self.predecessor
+
+    def successor(self):
+        return self.successor
+
+    def popPredecessor(self, index):
+        self.predecessor.pop(index)
+
+    def popSuccessor(self, index):
+        self.successor.pop(index)
+
+    def removeSuccessor(self, value):
+        self.successor.remove(value)
+
+    def removePredecessor(self, value):
+        self.predecessor.remove(value)
+
+    def removePredecessorAll(self):
+        self.predecessor.remove(value)
+
+
+def RLDA(vertexCollection,edgeCollection,intersectionValues, edgeValues, start, end ):
+    edgeBlack = set()  #set
+    vertexGreen = []    #queue 
+    vertexGreen.append(end)
+    minimumEdgeData[end +"_" + end] = 0
+    
+    while edgeBlack != edgeCollection:
+        print(vertexGreen)
+        currentVertexString = vertexGreen.pop(0)  #dequeuing the queue
+        currentVertex = findvertex(currentVertexString,vertexCollection)    # changing string to vertex
+        if currentVertex.successor != []:   
+            tempBFS = constructBFS(currentVertex, vertexCollection)
+            print(edgeGreen)
+            while edgeGreen != []:
+                edge = edgeGreen.pop()
+                edgeSplitIndex = edge.find("_")
+                result = findMinimumValue(edge[:edgeSplitIndex], edge[edgeSplitIndex+1:], end, edgeValues, intersectionValues)
+                print(result)
+                minimumEdgeData[edge] = result[0]
+                edgeBlack.add(edge)
+                thisVertex = findvertex(edge[:edgeSplitIndex], vertexCollection)
+                nextVertex = findvertex(edge[edgeSplitIndex+1:], vertexCollection)
+                nextVertex.removePredecessor(thisVertex.name)
+        if currentVertex.predecessor != []:
+            
+            while currentVertex.predecessor != []:
+                j = currentVertex.predecessor.pop(0)
+                if j not in vertexGreen:
+                    vertexGreen.append(j)
+                edgeBlack.add(j + "_" + currentVertex.name)
+                preVertex = findvertex(j, vertexCollection)
+                if currentVertex.name in preVertex.successor:
+                    preVertex.removeSuccessor(currentVertex.name)
+                
+                minimumResult = findMinimumValue(j, currentVertex.name, end, edgeValues, intersectionValues)
+                edgeName = str(j + "_" + currentVertex.name)
+                minimumEdgeData[edgeName] = int(minimumResult[0])
+        print(minimumEdgeData)
+
+
+    #initiate solution minimal cost
+    startMinimum = None
+    for key in minimumEdgeData:
+        indexof_ = key.find("_")
+        firstVertex = key[:indexof_]
+        if firstVertex == start:
+            value = minimumEdgeData[key]
+            if startMinimum == None or startMinimum >value:
+                startMinimum = value
+
+    #inititate solution path
+    path = nextz = start
+    while nextz != end:
+        tempMinimum = None
+        for key in minimumEdgeData:
+            indexof_ = key.find("_")
+            firstVertex = key[:indexof_]
+            if firstVertex == nextz:
+                value = minimumEdgeData[key]
+                if tempMinimum == None or tempMinimum >value:
+                    tempMinimum = value
+                    currentnextz = key[indexof_+1:]
+        
+        path += currentnextz
+        nextz = currentnextz
+
+    return startMinimum, path
+
+
+def findMinimumValue(start,dest, end, edgeValues, intersectionValues): #take start and dest as a string 
+    lowestz = None
+    minimum = None
+    for key in minimumEdgeData:
+        indexof_ = key.find("_")
+        firstVertex = key[:indexof_]
+        if firstVertex == dest:
+            if firstVertex == key[indexof_+1:]:
+                intrValue = 0
+            else:
+                intrValue = intersectionValues[start+"_"+key]
+            print(minimumEdgeData)
+            if minimumEdgeData[key] ==None:
+                continue
+            else:
+                minimumEdge = minimumEdgeData[key]
+            value = edgeValues[start+"_"+dest] + intrValue + minimumEdge
+            if minimum == None or minimum > value:
+                minimum = value
+                lowestz = key[indexof_+1:]
+    return minimum, lowestz
+
+
+def constructBFS(vertex, vertexCollection): #take vertex class and vertexcollextion as input
+    while vertex.successor != []:
+        
+        thisSuccessor = vertex.successor.pop()
+        if thisSuccessor == None:
+            return
+        edgeGreen.append(str(vertex.name) +"_"+ str(thisSuccessor))
+        nextVertex = findvertex(thisSuccessor, vertexCollection)
+        if nextVertex == None:
+            return
+        constructBFS(nextVertex, vertexCollection)
+
+def findvertex(vertex, vertexCollection):   #take vertex class and vertexcollextion as input
+    for node in vertexCollection:
+        if node.name == vertex:
+            return node
+    return None
+
+def main():
+
+    S = vertex([],["A","B"],"S")
+    A = vertex(["S"],["C"],"A")
+    B = vertex(["S"],["D"],"B")
+    C = vertex(["A"],["D","F"],"C")
+    D = vertex(["B","C"],["F"],"D")
+    F = vertex(["C","D"],[],"F")
+
+    thisVertexCollection = [S,A,B,C,D,F]
+
+
+    thisEdgeCollection = {"S_A","S_B","A_C","B_D","C_F","C_D","D_F"}
+    edgeValues = {"S_A":3, "S_B":2, "A_C":5, "B_D":6 , "C_F":7, "C_D":1,"D_F":3}
+    intersectionValues = {"S_A_C":2, "S_B_D":3, "A_C_F":1, "A_C_D":3, "C_D_F":8, "B_D_F":12}
+
+    startVertex = "S"
+    endVertex = "D"
+    finalResult = RLDA(thisVertexCollection, thisEdgeCollection, intersectionValues, edgeValues, startVertex, endVertex)
+    print(finalResult)
+
+
+
+if __name__ == "__main__":
+    main()
